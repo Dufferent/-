@@ -1,0 +1,110 @@
+#设备树驱动框架
+#pinctrl gpio-sys-cld
+//部分dts
+/ {
+	model = "Freescale i.MX6 ULL 14x14 EVK Board";
+	compatible = "fsl,imx6ull-14x14-evk", "fsl,imx6ull";
+
+	chosen {
+		stdout-path = &uart1;
+	};
+
+	memory {
+		reg = <0x80000000 0x20000000>;
+	};
+
+    ...
+    ...
+    ...
+
+	//dtbs-ts-driver
+	ts {
+		#address-cells = <1>;
+		#size-cells    = <1>;
+		compatible = "led_ts";
+		status = "okay";
+		reg = <0x020C406C 0x04
+			   0X020E0068 0X04
+			   0X020E02F4 0X04
+			   0X0209C000 0X04
+			   0X0209C004 0X04>;
+	};
+	//pinctrl-sys && gpio-sys-driver ts
+	pin_ts{
+		#address-cells = <1>;
+		#size-cells    = <1>;
+		compatible = "pin_ts";
+		status = "okay";
+
+		//pinctrl info
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ts>;
+		//gpio info
+		label = "pin test";
+		gpios = <&gpio1 3 GPIO_ACTIVE_LOW>;
+
+	};//最后一步，检查pinctrl的复用冲突 && 检查gpio的冲突
+
+	//输入实验
+	input_ts{
+		#address-cells = <1>;
+		#size-cells    = <1>;
+		compatible = "input_ts";
+		status = "okay";
+		//pinctrl info
+		pinctrl-names = "default";
+		pinctrl-0 = <&inputkey_ts>;
+		//gpio info
+		label = "input test";
+		gpios = <&gpio1 18 GPIO_ACTIVE_LOW>;
+	};
+
+    ...
+    ...
+    ...
+
+};
+
+&iomuxc {
+    pinctrl-names = "default";
+    pinctrl-0 = <&extend_board>;
+    imx6ul-evk {
+                pinctrl_gpio_key1: pinctrl_gpio_key1{
+                    fsl,pins = <
+                        MX6UL_PAD_UART1_CTS_B__GPIO1_IO18          0x000010B0
+                    >;
+                    };
+                    pinctrl_remote_control: remote_control {
+                    fsl,pins = <
+                          MX6UL_PAD_UART2_TX_DATA__UART2_DCE_TX	0x000010B1 /* remote control        add by pengjie 20190703*/
+                    >;
+                    };
+                    //pinctrl-sys-ts-node
+                    pinctrl_ts: ts_pin{
+                         //format out
+                         //&iomuxc = 0x020e0000
+                         //MX6UL_PAD_GPIO1_IO03__GPIO1_IO03 <0x0068 0x02f4 0x0000 5 0>
+                         //<mux_reg  config_reg  input_reg  mux_val  input_val(special)>
+                         //&MUX_GPIO1_IO3 =  0x020e0000 | 0x0068	
+                         //&PAD_GPIO1_IO3 = 	0x020e0000 | 0x02f4		
+                         //MUX_GPIO1_IO3 = 	0x05
+                         //NO INPUT REG 
+                           fsl,pins = <
+                                MX6UL_PAD_GPIO1_IO03__GPIO1_IO03    0x10B0
+                            >;
+                    };
+                    inputkey_ts: ts_input{
+			            fsl,pins = <
+				             MX6UL_PAD_UART1_CTS_B__GPIO1_IO18    0xf080
+			        >;
+		            };
+    ...
+    ...
+    ...
+};
+
+//#####   **  #define MX6UL_PAD_GPIO1_IO03__GPIO1_IO03 ... file ** 
+//#####/home/xny/git/qemu/imx6ull/qemu_imx6ull_kernel-master/arch/arm/boot/dts/imx6ul-pinfunc.h
+
+//########################按键输入##############################
+//########################定时器 led############################
