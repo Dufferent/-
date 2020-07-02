@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/xny/git/qemu/imx6ull/qemu_imx6ull_kernel-master/include",
+                "/home/xny/git/qemu/imx6ull/qemu_imx6ull_kernel-master/arch/arm/include",
+                "/home/xny/git/qemu/imx6ull/qemu_imx6ull_kernel-master/arch/arm/include/generated"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}
