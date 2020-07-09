@@ -1,0 +1,202 @@
+/*
+ * avcodec：编解码（最重要的库）。
+ * avformat：封装格式处理。
+ * avfilter：滤镜特效处理。
+ * avdevice：各种设备的输入输出。
+ * avutil：工具库（大部分库都需要这个库的支持）。
+ * postproc：后加工。
+ * swresample：音频采样数据格式转换。
+ * swscale：视频像素数据格式转换
+ */
+
+/*
+ * av_register_all();//注册所有文件格式和编解码库
+ * avformat_network_init();//打开网络视频流
+ * av_open_input_file();//读取文件头部把信息保存到AVFormatContext结构体
+ * av_find_stream_info();//为pFormatCtx->streams填充上正确的信息
+ * CODEC_TYPE_VIDEO;//通过判断得到视频流类型
+ * avcodec_find_decoder();//查找解码器
+ * avcodec_open();//打开编解码器
+ * avcodec_alloc_frame();//分配空间保存帧数据
+ * av_read_frame();//不断从流中提取帧数据
+ * avcodec_decode_video();//解码视频流
+ * avcodec_close();//关闭解码器
+ * avformat_close_input_file();//关闭输入文件
+ */
+
+//解码流程
+//1.av_register_all              //注册所有文件格式和编解码库<*调用ffmpeg之前都要进这一步*>       
+//2.avformat_open_input          //打开输入文件源
+//3.avformat_find_stream_info    //查找输入文件数据流信息
+//4.avcodec_find_decoder         //查找解码器
+//5.avcodec_open2
+//6.av_read_frame                //读取帧信息
+//7.判断信息是否有效
+//8.AVPacket
+//9.avcodec_decode_video2
+//10.AVFrame
+//11.显示
+
+//数据结构
+//1.AVFormatContext   ->     avformat.h
+    /*
+        struct AVInputFormat *iformat：输入数据的封装格式
+        AVIOContext *pb：输入数据缓存
+        unsigned int nb_streams：音视频流个数（输入视频的AVStream 个数）
+        AVStream **streams：音视频流（输入视频的AVStream []数组）
+        char filename[1024]：文件名
+        int64_t duration：时长（单位：us）（输入视频的时长（以微秒为单位））
+        int bit_rate：比特率（输入视频的码率）
+        AVDictionary *metadata：元数据
+    */
+//2.AVInputFormat
+    /*
+        long_name：封装格式的长名称
+        extensions：封装格式的扩展名
+        id：封装格式ID
+        一些封装格式处理的接口函数
+    */
+    
+//3.AVCodecContext   ->    avcodec.h
+    /*
+        codec：编解码器的AVCodec
+        width, height：图像的宽高（只针对视频）
+        pix_fmt：像素格式（只针对视频）
+        sample_rate：采样率（只针对音频）
+        channels：声道数（只针对音频）
+        sample_fmt：采样格式（只针对音频）
+    */
+    
+//4.AVStream          ->    avformat.h
+    /*
+        AVCodecContext *codec：视频/音频流的AVCodecContext
+        AVRational time_base：时间基准，真正的时间 ＝PTS*time_base
+        int64_t duration：该视频/音频流时间长度
+        AVDictionary *metadata：元数据信息
+        AVRational avg_frame_rate：帧率
+        AVPacket attached_pic：附加图片
+    */
+
+//5.AVCodec
+    /*
+        name：编解码器名称
+        long_name：编解码器长名称
+        type：编解码器类型
+        id：编解码器ID
+        一些编解码的接口函数
+    */
+
+//6.AVPacket
+    /*
+        uint8_t *data：压缩编码数据，一个AVPacket的data通常对应一个NAL。
+        int   size：data的大小
+        int64_t pts：显示时间戳
+        int64_t dts：解码时间戳
+        int   stream_index：标识该AVPacket所属的视频/音频流
+    */
+
+//7.AVFrame
+    /*
+        data：解码后的图像像素数据（音频采样数据）。
+        linesize：对视频来说是图像中一行像素的大小；对音频来说是整个音频帧的大小。
+        width, height：图像的宽高（只针对视频）。
+        key_frame：是否为关键帧（只针对视频） 。
+        pict_type：帧类型（只针对视频） 。例如I，P，B。
+    */
+
+//常用API
+/*
+    1、avformat_open_input
+    int avformat_open_input(AVFormatContext **ic_ptr,const char *filename,AVInputFormat *fmt,AVDictionary **options);
+    作用：打开文件或URL，并使基于字节流的底层输入模块得到初始化；解析多媒体文件或多媒体流的头信息，创建AVFormatContext结构并填充其中的关键字段，依次为各个原始流建立AVStream结构。
+    参数：
+
+    ic_ptr：用于返回avformat_open_input内部构造的一个AVFormatContext结构体。
+    filename：指定文件名。
+    fmt：用于显式指定输入文件的格式，如果设为空则自动判断其输入格式。
+    options：传入的附加参数。
+
+    说明：这个函数通过解析多媒体文件或流的头信息及其他辅助数据，能够获取足够多的关于文件、流和编解码器的信息，但任何一种多媒体格式提供的信息都是有限的，而且不同的多媒体软件制作对头信息的设置各有不同，另外这些软件在产生多媒体内容时难免引入错误，这种情况下并不能保证获取到所有需要的信息，这是就要考虑另一个函数：avformat_find_stream_info。
+
+
+    2、avformat_find_stream_info
+    int avformat_find_stream_info(AVFormatContext *ic, AVDictionary **options);
+    作用：用于获取必要的编解码器参数。需要得到各媒体流对应编解码器的类型和id，这是两个定义在avutils.h和avcodec.h中的枚举：
+
+    enum AVMediaType {
+        AVMEDIA_TYPE_UNKNOWN = -1,
+        AVMEDIA_TYPE_VIDEO,
+        AVMEDIA_TYPE_AUDIO,
+        AVMEDIA_TYPE_DATA,
+        AVMEDIA_TYPE_SUBTITLE,
+        AVMEDIA_TYPE_ATTACHMENT,
+        AVMEDIA_TYPE_NB
+    };
+    enum CodecID {
+        CODEC_ID_NONE,
+        CODEC_ID_MPEG1VIDEO,
+        CODEC_ID_MPEG2VIDEO,
+        CODEC_ID_MPEG2VIDEO_XVMC,
+        CODEC_ID_H261,
+        CODEC_ID_H263,
+    CODEC_ID_H264,
+        ...
+    };
+    若媒体格式的数据流具有完整头信息，可以通过avformat_open_input得到编解码器的类型和id；
+    否则，需要通过avformat_find_stream_info函数获取。
+    此外，对于音频编解码器，时间基准、采样率、声道数、位宽、帧长度
+    与视频编解码器图像大小、色彩空间等也需要从avformat_find_stream_info函数得到。
+    
+    3、av_read_frame
+    int av_read_frame(AVFormatContext *s, AVPacket *pkt);
+    作用：用于从多媒体文件或多媒体流中读取媒体数据，数据由AVPacket结构pkt来存放。对于音频数据，若是固定比特率，则pkt中装载一个或多个音频帧；若为可变比特率，则pkt中装载一个音频帧。对于视频数据，pkt中装载有一个视频帧。注：当再次调用本函数之前，需使用av_free_packet释放pkt所占用的资源。
+
+    4、av_seek_frame
+    int av_seek_frame(AVFormatContext *s, int stream_index, int64_t timestamp, int flags);
+    作用：通过改变媒体文件的读写指针来实现对媒体文件的随机访问，大多源于媒体播放器的快进、快退等功能。
+    参数：
+
+    s：AVFormatContext指针；
+    avformat_open_input返回得到。
+    stream_index：指定媒体流。
+    timestamp：时间标签。
+    flags：定位方式。
+
+    5、av_close_input_file
+    void av_close_input_file(AVFormatContext *s);
+
+    作用：关闭媒体文件，释放资源，关闭物理IO。
+
+    6、avcodec_find_decoder
+    AVCodec *avcodec_find_decoder(enum CodecID id);
+    AVCodec *avcodec_find_decoder_by_name(const char *name);
+    作用：根据指定解码器ID或者解码器名称查找相应的解码器并返回AVCodec 。
+
+    7、avcodec_open
+    int avcodec_open(AVCodecContext *avctx, AVCodec *codec);
+    作用：根据输入的AVCodec指针具体化AVCodecContext结构。在调用该函数之前，首先调用avcodec_alloc_context分配一个AVCodecContext结构，或调用avformat_open_input获取媒体文件中对应媒体流的AVCodecContext结构；
+    此外，通过avcodec_find_decoder获取AVCodec结构。
+
+    8、avcodec_decode_video2
+    int avcodec_decode_video2(AVCodecContext *avctx,AVFrame *picture,int *got_picture_ptr,AVPacket *avpkt);
+    作用：解码视频帧。
+    参数：
+    avctx：解码器上下文。
+    picture：输出数据。
+    got_picture_ptr：指示是否有解码数据输出。
+    avpkt：输入数据。
+
+    9、avcodec_decode_audio4
+    int avcodec_decode_audio4(AVCodecContext *avctx, AVFrame *frame, int *got_frame_ptr, AVPacket *avpkt);
+    作用：解码音频帧。输入数据在AVPacket结构中，输出数据在frame中，got_frame_ptr表示是否有数据输出。
+    参数：
+    avctx：解码器上下文。
+    frame：输出数据。
+    got_frame_ptr：指示是否有解码数据输出。
+
+    avpkt：输入数据。
+
+    10、avcodec_close
+    int avcodec_close(AVCodecContext *avctx);作用：关闭解码器，释放avcodec_open中分配的资源。
+
+*/
