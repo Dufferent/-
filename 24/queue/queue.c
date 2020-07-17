@@ -24,18 +24,18 @@ Status In_Queue(Queue *s,QUEUE_TYPE val)
         *(s->head) = val;//在头指针处添加队列新成员
         s->head++;       //头指针向后移动
         s->count++;      //队列计数器自增
+        return 1;
     }
     else if(s->count = s->len)
     {
         *(s->head) = val;//在头指针处添加队列新成员
+        return OKAY;
     }
     else
     {
         printf("Queue is fulled!\r\n");
         return OVERFLOW;
     }
-    
-    return 0;
 }
 
 QUEUE_TYPE Out_Queue(Queue *s)

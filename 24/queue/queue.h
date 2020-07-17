@@ -3,7 +3,7 @@
 
 typedef unsigned int Status;
 
-#define QUEUE_TYPE int
+#define QUEUE_TYPE char
 #define QUEUE_ELEM_DEEP 32
 #define QUEUE_SIZE QUEUE_ELEM_DEEP*sizeof(QUEUE_ELEM_DEEP)
 

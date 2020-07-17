@@ -25,16 +25,16 @@ struct sockaddr_in    *saddr;  //server socket
 const char send_buf[send_len] = "hellow server!\n";
 char       recv_buf[recv_len] =  {0};
 /* file operate functions */
-char       write_buf[1] = {0};
+char       write_buf[recv_len] = {0};
 int recv_file(int fd, void * buf, size_t n,
 			 int flag, __SOCKADDR_ARG addr,
-			 socklen_t * addr_len)
+			 socklen_t * addr_len,void* arg)
 {
     int rec;
     int file_desc;
 
     /* 打开文件 */
-    file_desc = open("./RECV",O_RDWR|O_CREAT);
+    file_desc = open((char*)arg,O_RDWR|O_CREAT);
     do{
         rec = recvfrom(fd,buf,n,flag,addr,addr_len);
         //读多少写多少
@@ -47,7 +47,7 @@ int recv_file(int fd, void * buf, size_t n,
 
 
 
-int main(void)
+int main(int argc,char** argv)
 {
     int cfd;
     int ret;
@@ -73,7 +73,7 @@ int main(void)
         exit(-1);
     }
     /* 接收文件 */
-    recv_file(cfd,write_buf,1,flags,(struct sockaddr*)saddr,&s_len);
+    recv_file(cfd,write_buf,recv_len,flags,(struct sockaddr*)saddr,&s_len,argv[1]);
 
     return 0;
 }

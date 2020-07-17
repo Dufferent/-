@@ -13,10 +13,10 @@ $(PRO1_NAME) : $(OBJ1)
 
 client:
 $(PRO2_NAME) : $(OBJ2)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -L./queue -lqueue
 
 %.o : %.c
-	$(CC) -o $@ -c $<
+	$(CC) -o $@ -c $< -L./queue -lqueue
 
 clean:
 	rm -rf ./*.o $(PRO1_NAME) $(PRO2_NAME)

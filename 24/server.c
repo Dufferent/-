@@ -118,7 +118,7 @@ int main(int argc,char* argv[])
             /* 读多少发多少 */
             if(read_size > 0)
             {
-                ret = send_file(cfd,read_buf,1,flags);
+                ret = send_file(cfd,read_buf,read_size,flags);
                 if(ret < 0)
                 {
                     printf("error for send byte!\r\n");
@@ -127,7 +127,7 @@ int main(int argc,char* argv[])
                     exit(-1);
                 }
             }
-            usleep(10*1000);//30ms的间隔，等待接收完成
+            //usleep(5);//5us的间隔，等待接收完成
         }while(read_size > 0);
         printf("send all!\r\n");
         close(cfd);

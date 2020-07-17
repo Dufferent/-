@@ -25,7 +25,7 @@ char       recv_buf[recv_len] =  {0};
 struct sockaddr_in *addr;  //server set
 struct sockaddr    *caddr; //client get
 /* file buf */
-char read_buf[1];
+char read_buf[send_len];
 /* send file functions */
 int send_file(int fd,const void* buf,size_t n,int flag)
 {
@@ -114,9 +114,9 @@ int main(int argc,char* argv[])
         }
 
         do{
-            read_size = read(fd,read_buf,1);//一次读一个字节
+            read_size = read(fd,read_buf,send_len);//一次读一个字节
             /* 读多少发多少 */
-            ret = send_file(cfd,read_buf,1,flags);
+            ret = send_file(cfd,read_buf,read_size,flags);
             if(ret < 0)
             {
                 printf("error for send byte!\r\n");
@@ -124,7 +124,7 @@ int main(int argc,char* argv[])
                 close(sfd);
                 exit(-1);
             }
-            usleep(30*1000);//30ms的间隔，等待接收完成
+            usleep(1*1000);//1ms的间隔，等待接收完成
         }while(read_size > 0);
         printf("send all!\r\n");
         close(cfd);
