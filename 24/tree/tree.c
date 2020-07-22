@@ -4,77 +4,105 @@
 #include "unistd.h"
 #include "fcntl.h"
 #include "sys/types.h"
+#include "string.h"
 
-Status Creat_BTree(BNode *t,unsigned int deep)
+char *ptr;
+char *get;
+Status Creat_Bt(BNode *t)
 {
-    BNode vl;//操作节点
-    BNode vr;
-    (*t) = (BNode)malloc(sizeof(struct BTree));
-    vl = *t; //将操作节点与传入节点合并
-    vr = *t;
-    for(int i=0;i<deep-1;i++)
-    {
-        //一个结点的两个分支
-        BNode newR;
-        BNode newL;
-        newL = (BNode)malloc(sizeof(struct BTree));
-        newR = (BNode)malloc(sizeof(struct BTree));
-        vl->lchild = newL;
-        vl->rchild = newR;
+    BNode v;//操作节点
 
-        //切换到下一个节点
-        vl=vl->lchild;
-    }
-    vr=vr->rchild;//根节点已经展开
-    for(int i=0;i<deep-2;i++)
-    {
-        //一个结点的两个分支
-        BNode newR;
-        BNode newL;
-        newL = (BNode)malloc(sizeof(struct BTree));
-        newR = (BNode)malloc(sizeof(struct BTree));
-        vr->lchild = newL;
-        vr->rchild = newR;
+    ptr = (char*)malloc(100*sizeof(char));
+    memset(ptr,0,100);
 
-        //切换到下一个节点
-        vr=vr->rchild;
-    }
+    (*t) = (BNode)malloc(sizeof(struct BTree));//根节点
+    v = (*t);
 
-    return 0;
+    printf("please input by preoder!\r\n");
+    printf("such as:dca--b--e-f--\r\n");
+    printf("\t\t      d     \r\n");
+    printf("\t\t     /\\    \r\n");
+    printf("\t\t    c  e    \r\n");
+    printf("\t\t   /\\  \\  \r\n");
+    printf("\t\t  a  b  f   \r\n");
+
+    scanf("%s",ptr);
+    //1.preorder vist
+    PreOrder_Bt(&v);
 }
 
-Status Input_BTree(BNode *t)
+BNode PreOrder_Bt(BNode *t)
 {
     BNode v;
-    v=*t;
-    if(v->lchild != NULL)
-        Input_BTree(&v->lchild);
-    scanf("%d",&v->data);
-    if(v->rchild != NULL)
-        Input_BTree(&v->rchild);
-    return 0;
+    v = (*t);
+    if(v)
+    {
+        v->data = *ptr;
+        printf("%c\r\n",*ptr);
+        ptr++;
+        v->lchild = NULL;
+        v->rchild = NULL;
+        if(*ptr != 45)//'-'的ascill是45
+            v->lchild = (BNode)malloc(sizeof(struct BTree));
+        else
+            ptr++;
+        
+        v->lchild = PreOrder_Bt(&v->lchild);
+        if(*ptr != 45)
+            v->rchild = (BNode)malloc(sizeof(struct BTree));
+        else
+            ptr++;
+        
+        v->rchild = PreOrder_Bt(&v->rchild);
+        return v;
+    }
+    else
+    {
+        return NULL;
+    }
 }
-
 Status Show_BTree(BNode t)
 {
-    /* 左中右遍历 */
+    /* 先遍历 */
+    if(t)
+        printf("%c",t->data);
+    
     if(t->lchild != NULL)
         Show_BTree(t->lchild);
-    printf("%d",t->data);
     if(t->rchild != NULL)
         Show_BTree(t->rchild);
     
     return 0;
 }
 
-Status Graph_BTree(BNode t)
+void Get_Ptr(BNode t)
 {
-    /* 左中右遍历 */
-    if(t->lchild != NULL)
-        Show_BTree(t->lchild);
-    printf("%d",t->data);
-    if(t->rchild != NULL)
-        Show_BTree(t->rchild);
+    /* 先遍历 */
+    static int i=1;
+    if(i)
+    {   
+        get = (char*)malloc(100*sizeof(char));
+        i--;
+    }
+    if(t)
+    {
+        *get = t->data;
+        printf("%c",*get);
+        get++;
+    }
     
-    return 0;
+    if(t->lchild != NULL)
+        Get_Ptr(t->lchild);
+    if(t->rchild != NULL)
+        Get_Ptr(t->rchild);
+}
+
+void Show_Graph(void)
+{
+    printf("\r\n");
+    printf("\t\t      %c        \r\n",*(get-6));
+    printf("\t\t     /\\        \r\n");
+    printf("\t\t    %c  %c      \r\n",*(get-5),*(get-2));
+    printf("\t\t   /\\  /\\     \r\n");
+    printf("\t\t  %c %c    %c   \r\n",*(get-4),*(get-3),*(get-1));
 }
