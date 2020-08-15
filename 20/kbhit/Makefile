@@ -7,10 +7,10 @@ static:
 	ar -rcs libkbhit.a ./kbhit.o
 
 ts-static:
-	gcc -o ts ./demo.c -lkbhit -lpthread
+	gcc -o ts ./demo.c -lkbhit -lpthread -L${PWD}
 
 ts-shared:
-	gcc -o ts ./demo.c -lkbhit
+	gcc -o ts ./demo.c -lkbhit -lpthread -L${PWD}
 
 clean:
 	rm -rf ./*.o ./*.a ./*.so ts

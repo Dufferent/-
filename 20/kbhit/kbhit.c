@@ -71,8 +71,11 @@ void Task_1(void *arg)
         if(ret > 0)
         {
            //printf("type :%d\tvalue :%d\tcode :%d\t\n",input.type,input.value,input.code);
-           my_key.key_val = input.value;
-           my_key.flag = 1;
+           if(input.type == 1)
+           {
+                my_key.key_val = input.code;
+                my_key.flag = 1;
+           }
         }
     }
     close(key_fd);
