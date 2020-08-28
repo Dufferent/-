@@ -35,6 +35,8 @@ int main(int argc,char **argv)
     if(argc < 6)
     {
         printf("cmd error!\ntry like:scpc -s|-g [host] [port] [filedir] [local-dir]\n");
+        cout<<"\t\t[-s|-g]:-s:send file in [local-dir] to host:port's filedir\r\n"<<endl;
+        cout<<"\t\t        -g:get a file save to [local-dir] in host:port's filedir\r\n"<<endl;
         exit(-1);
     }
     //初始化客户端套接字

@@ -61,11 +61,13 @@ int myscp(char** argv)
         int rec = 0;
         int fd;
         char cmdbuf[64] = {0};
+error_1:
         cfd = accept(sfd,(sockaddr*)&caddr,&clen);
         if(cfd == -1)
         {
             cout<<"error accept!"<<endl;
-            exit(-1);
+            //exit(-1);
+            goto error_1;
         }
         cout<<"\t\t-------------------------------\t\t"<<endl;
         cout<<"\t\t|WELCOME TO MYSCP APPLICATION!|\t\t"<<endl;
@@ -111,7 +113,7 @@ int myscp(char** argv)
             if(index < 2)
             {
                 cout<<"\t\t-------------------------------\t\t"<<endl;
-                cout<<"\t\t|RECV ERROR FORNAT-------------\t\t"<<endl;
+                cout<<"\t\t|RECV ERROR FORMAT-------------\t\t"<<endl;
                 cout<<"\t\t-------------------------------\t\t"<<endl;
                 close(cfd);
                 index = 0;
@@ -132,7 +134,9 @@ int myscp(char** argv)
             if(fd < 0 )
             {
                 cout<<"file open failed!"<<endl;
-                exit(-1);
+                close(cfd);
+                goto error_1;
+                //exit(-1);
             }
             //sleep(3);//等待客户端发送文件
             do{
@@ -153,7 +157,8 @@ int myscp(char** argv)
             if(fd < 0 )
             {
                 cout<<"file open failed!"<<endl;
-                exit(-1);
+                goto error_1;
+                //exit(-1);
             }
             do{
                 rec = read(fd,WR_BUF,BUF_LEN);//读多少发多少
